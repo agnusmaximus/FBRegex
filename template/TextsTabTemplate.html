@@ -1,0 +1,18 @@
+<template name="TextsTab">
+  <div id="TextsTab">
+    {{#each posts}}
+    {{#if message}}
+
+    <div class="fbox">
+      <div><b>{{from.name}}</b></div>
+      <div>{{message}}</div>
+      {{#if picture}}
+      <div>
+      <img src="{{picture}}"/>
+      </div>
+      {{/if}}
+    </div>
+    {{/if}}
+    {{/each}}
+  </div>
+</template>
