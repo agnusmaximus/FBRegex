@@ -1,6 +1,11 @@
 if (Meteor.isClient) {
     
-    Session.set("fb_posts", new Array());
+    //Session.set("fb_posts", new Array());
+    posts = new Array();
+
+    function updateMasonry() {
+	$("#TextsTab").masonry({isAnimated:false}).masonry("reload");
+    }
 
     /*
       function appendToPosts
@@ -11,12 +16,21 @@ if (Meteor.isClient) {
       @data - home stream data
      */
     function appendToPosts(data) {
-	//fb_posts = fb_posts.concat(data.data);
-	originalData = Session.get("fb_posts");
-	Session.set("fb_posts", originalData.concat(data.data));
-	//console.log(Session.get("fb_posts"));
-	Meteor.flush();
-	$("#TextsTab").masonry({isAnimated : false});
+	posts = posts.concat(data.data);
+	total = "";
+
+	for (i = 0; i < data.data.length; i++) {
+	    fragment = Template.Post(data.data[i]);
+	    total += fragment;
+	}
+
+	var $element = $(total);
+	$element.css({"z-index":"0",
+		      "visibility":"hidden",
+		      "top" : $(document).height()});
+	$("#TextsTab").append($element);
+	
+	setTimeout(updateMasonry, 1000);	
     }
 
     /*
@@ -30,7 +44,6 @@ if (Meteor.isClient) {
      */
     function handleGroupIds(data) {
 	for (i = 0; i < data.data.length; i++) {
-
 	    getGroupStream(data.data[i].gid, appendToPosts);
 	}
     }
@@ -71,13 +84,13 @@ if (Meteor.isClient) {
 	}
     }
 
-    Template.TextsTab.validPost = function(obj) {
+    Template.Post.validPost = function(obj) {
 	return (obj.message || 
 		obj.description || 
 		obj.story);
     }
     
-    Template.TextsTab.recipient = function(obj) {
+    Template.Post.recipient = function(obj) {
 	return obj.to.data[0].name;
     }
 }
