@@ -14,9 +14,25 @@ if (Meteor.isClient) {
 	//fb_posts = fb_posts.concat(data.data);
 	originalData = Session.get("fb_posts");
 	Session.set("fb_posts", originalData.concat(data.data));
-	console.log(Session.get("fb_posts"));
+	//console.log(Session.get("fb_posts"));
 	Meteor.flush();
 	$("#TextsTab").masonry({isAnimated : false});
+    }
+
+    /*
+      function handleGroupIds
+      ---------------------------------
+      A callback function which handles 
+      a list of group ids. It will then
+      fetch group stream posts.
+
+      @data - list of groups
+     */
+    function handleGroupIds(data) {
+	for (i = 0; i < data.data.length; i++) {
+
+	    getGroupStream(data.data[i].gid, appendToPosts);
+	}
     }
 
     //Returns whether or not the user is logged in
@@ -30,12 +46,20 @@ if (Meteor.isClient) {
 	    Meteor.loginWithFacebook({
 		    requestPermissions : ['read_stream',
 					  'read_mailbox',
-					  'read_requests'],
+					  'read_requests',
+					  'user_groups',
+					  'friends_groups'],
 		},
 		function() {
+		    //Id of user
 		    id = Meteor.user().services.facebook.id;
+		    //Get feed stream and statuses of user
 		    getFeedStream(id, appendToPosts);
 		    getStatusStream(id, appendToPosts);
+
+		    //Get user's group ids and posts
+		    query = "SELECT gid FROM group_member where uid=" + id;
+		    makeFBCall(query, handleGroupIds);
 		});
 	}
     }

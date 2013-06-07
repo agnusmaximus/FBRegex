@@ -112,3 +112,27 @@ window.statusStreamContinue = function(url, method) {
 	    }
 	});
 }
+
+/*
+  function getGroupStream
+  ---------------------------------------------------
+  Gets all posts in a group
+  
+  @id - id of group
+  @method - callback  
+ */
+window.getGroupStream = function(id, method) {
+    url = "https://graph.facebook.com/" + id + 
+          "/feed?access_token=";
+    url += Meteor.user().services.facebook.accessToken;
+    console.log(url);
+    
+    Meteor.http.get(url, function(err, resp) {
+	    method(resp.data);
+	    if (resp.data.data.length != 0) {
+		nextUrl = resp.data.paging.next;
+		return;
+		feedStreamContinue(nextUrl, method);
+	    }
+	});
+}
