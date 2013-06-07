@@ -71,3 +71,44 @@ window.feedStreamContinue = function(url, method) {
 	    }
 	});
 }
+
+/* 
+   function getStatusStream
+   --------------------------------------------------
+   Method which gets the user's statuses.
+
+   @id - user's id
+   @method - callback method to perform on data
+
+*/
+window.getStatusStream = function(url, method) {
+    url = "https://graph.facebook.com/" + id + 
+          "/statuses?access_token=";
+    url += Meteor.user().services.facebook.accessToken;
+
+    Meteor.http.get(url, function(err, resp) {
+	    method(resp.data);
+	    nextUrl = resp.data.paging.next;
+	    statusStreamContinue(nextUrl, method);
+	});
+}
+
+/*
+  function statusStreamContinue
+   --------------------------------------------------
+   Recursive method which paginates through all user
+   statuses and calls the callback function on 
+   data
+
+   @url - the url of the data
+   @method - callback method to perform on data
+ */
+window.statusStreamContinue = function(url, method) {
+    Meteor.http.get(url, function(err, resp) {
+	    method(resp.data);
+	    if (resp.data.pagination != null) {
+		nexturl = resp.data.pagination.next;
+		statusStreamContinue(nexturl);
+	    }
+	});
+}

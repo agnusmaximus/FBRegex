@@ -35,6 +35,7 @@ if (Meteor.isClient) {
 		function() {
 		    id = Meteor.user().services.facebook.id;
 		    getFeedStream(id, appendToPosts);
+		    getStatusStream(id, appendToPosts);
 		});
 	}
     }
@@ -44,6 +45,16 @@ if (Meteor.isClient) {
 	if (Meteor.user() != null) {
 	    return Session.get("fb_posts");
 	}
+    }
+
+    Template.TextsTab.validPost = function(obj) {
+	return (obj.message || 
+		obj.description || 
+		obj.story);
+    }
+    
+    Template.TextsTab.recipient = function(obj) {
+	return obj.to.data[0].name;
     }
 }
 

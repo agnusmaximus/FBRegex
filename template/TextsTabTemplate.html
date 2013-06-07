@@ -1,15 +1,38 @@
 <template name="TextsTab">
   <div id="TextsTab">
     {{#each posts}}
-    {{#if message}}
+    {{#if validPost this}}
 
     <div class="fbox">
-      <div><b>{{from.name}}</b></div>
-      <div>{{message}}</div>
-      {{#if picture}}
       <div>
-      <img src="{{picture}}"/>
+	<b>{{from.name}}</b>
+	{{#if to.data}}
+	<b> &#9656; {{recipient this}}</b>
+	{{/if}}
       </div>
+
+      {{#if story}}
+      <div class="story">{{story}}</div>
+      {{/if}}
+      {{#if message}}
+      <div class="post_content">{{message}}</div>
+      {{/if}}
+      {{#if picture}}
+      <br/>
+      <div style="text-align:center">
+	{{#if link}}
+	<a href="{{link}}" target="_blank">
+	  <img src="{{picture}}"/>
+	</a>
+	{{/if}}
+	{{#else}}
+	<img src="{{picture}}"/>
+	{{/else}}
+      </div>
+      {{/if}}
+      {{#if description}}
+      <br/>
+      <div class="description">{{description}}</div>
       {{/if}}
     </div>
     {{/if}}
