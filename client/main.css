@@ -55,3 +55,7 @@ body {
 .post_content {
     font-size:8pt;
 }
+
+a {
+    text-decoration:none;
+}

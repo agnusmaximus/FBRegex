@@ -1,10 +1,36 @@
 if (Meteor.isClient) {
-    
-    //Session.set("fb_posts", new Array());
-    posts = new Array();
+
+    Meteor.logout();
+    posts = new Array();    
 
     function updateMasonry() {
 	$("#TextsTab").masonry({isAnimated:false}).masonry("reload");
+    }
+
+    /*
+      function createPostTemplate
+      --------------------------------
+      Creates a post template given html and
+      appends it to the texts tab section
+
+      @html - html
+    */
+    function createPostTemplate(html) {
+	//turn html into jquery object
+	var $element = $(html);
+	
+	//set some initial css so that the group of 
+	//posts will animate from offscreen to onscreen
+	$element.css({"z-index":"0",
+   		      "visibility":"hidden",
+		      "top" : $(document).height()});
+
+	//append the elements to the dom
+	$("#TextsTab").append($element);
+	
+	//set a timeout callback which actually
+	//updates the view (to prevent lag)
+	setTimeout(updateMasonry, 1000);	
     }
 
     /*
@@ -16,21 +42,20 @@ if (Meteor.isClient) {
       @data - home stream data
      */
     function appendToPosts(data) {
+	//Add to the posts array
 	posts = posts.concat(data.data);
+
+	//Total html
 	total = "";
 
+	//Get html to append to the existing post content
 	for (i = 0; i < data.data.length; i++) {
 	    fragment = Template.Post(data.data[i]);
 	    total += fragment;
 	}
 
-	var $element = $(total);
-	$element.css({"z-index":"0",
-		      "visibility":"hidden",
-		      "top" : $(document).height()});
-	$("#TextsTab").append($element);
-	
-	setTimeout(updateMasonry, 1000);	
+	//Create and append the posts
+	createPostTemplate(total);
     }
 
     /*
@@ -45,6 +70,26 @@ if (Meteor.isClient) {
     function handleGroupIds(data) {
 	for (i = 0; i < data.data.length; i++) {
 	    getGroupStream(data.data[i].gid, appendToPosts);
+	}
+    }
+
+    function performRegex(pattern) {
+	$("#TextsTab").empty();
+	regex = new RegExp(pattern);
+
+	for (i = 0; i < posts.length; i++) {
+	    if (regex.test(posts[i].from.name) ||
+		regex.test(posts[i].description) ||
+		regex.test(posts[i].story) ||
+		regex.test(posts[i].message)) {
+		fragment = Template.Post(posts[i]);
+		createPostTemplate(fragment);
+	    }
+	    if (posts[i].to &&
+		regex.test(posts[i].to.data[0].name)) {
+		fragment = Template.Post(posts[i]);
+		createPostTemplate(fragment);
+	    }
 	}
     }
 
@@ -92,6 +137,14 @@ if (Meteor.isClient) {
     
     Template.Post.recipient = function(obj) {
 	return obj.to.data[0].name;
+    }
+
+    Template.SearchTab.events = {
+	'keydown #Search' : function(event) {
+	    if (event.which == 13) {
+		performRegex($(event.target).val());
+	    }
+	}
     }
 }
 
