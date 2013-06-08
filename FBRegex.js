@@ -1,7 +1,13 @@
 if (Meteor.isClient) {
+    POST_BATCH_NUM = 25;
 
     Meteor.logout();
-    posts = new Array();    
+    posts = new Array();
+    shouldUpdate = true;
+
+    function makeNotification(msg) {
+	$("#notification").html(msg);
+    }
 
     function updateMasonry() {
 	$("#TextsTab").masonry({isAnimated:false}).masonry("reload");
@@ -14,23 +20,27 @@ if (Meteor.isClient) {
       appends it to the texts tab section
 
       @html - html
+      @force - should force create post template
     */
-    function createPostTemplate(html) {
-	//turn html into jquery object
-	var $element = $(html);
+    function createPostTemplate(html, force) {
 	
-	//set some initial css so that the group of 
-	//posts will animate from offscreen to onscreen
-	$element.css({"z-index":"0",
-   		      "visibility":"hidden",
-		      "top" : $(document).height()});
+	if (force || shouldUpdate) {
+	    //turn html into jquery object
+	    var $element = $(html);
+	
+	    //set some initial css so that the group of 
+	    //posts will animate from offscreen to onscreen
+	    $element.css({"z-index":"0",
+			  "visibility":"hidden",
+			  "top" : $(document).height()});
 
-	//append the elements to the dom
-	$("#TextsTab").append($element);
-	
-	//set a timeout callback which actually
-	//updates the view (to prevent lag)
-	setTimeout(updateMasonry, 1000);	
+	    //append the elements to the dom
+	    $("#TextsTab").append($element);
+	    
+	    //set a timeout callback which actually
+	    //updates the view (to prevent lag)
+	    setTimeout(updateMasonry, 1000);	
+	}
     }
 
     /*
@@ -76,6 +86,10 @@ if (Meteor.isClient) {
     function performRegex(pattern) {
 	$("#TextsTab").empty();
 	regex = new RegExp(pattern);
+	n_results = 0;
+	total_html = "";
+
+	makeNotification("Regexing Facebook Data...");
 
 	for (i = 0; i < posts.length; i++) {
 	    if (regex.test(posts[i].from.name) ||
@@ -83,14 +97,26 @@ if (Meteor.isClient) {
 		regex.test(posts[i].story) ||
 		regex.test(posts[i].message)) {
 		fragment = Template.Post(posts[i]);
-		createPostTemplate(fragment);
+		//createPostTemplate(fragment, true);
+		total_html += fragment;
+		n_results++;
 	    }
-	    if (posts[i].to &&
+	    else if (posts[i].to &&
 		regex.test(posts[i].to.data[0].name)) {
 		fragment = Template.Post(posts[i]);
-		createPostTemplate(fragment);
+		//createPostTemplate(fragment, true);
+		total_html += fragment;
+		n_results++;
+	    }
+
+	    if (n_results % POST_BATCH_NUM == 0) {
+		createPostTemplate(total_html, true);
+		total_html = "";
 	    }
 	}
+
+	createPostTemplate(total_html, true);
+	makeNotification("Found " + n_results + " results");
     }
 
     //Returns whether or not the user is logged in
@@ -118,6 +144,8 @@ if (Meteor.isClient) {
 		    //Get user's group ids and posts
 		    query = "SELECT gid FROM group_member where uid=" + id;
 		    makeFBCall(query, handleGroupIds);
+
+		    makeNotification("Loading Facebook Data...");
 		});
 	}
     }
@@ -142,6 +170,7 @@ if (Meteor.isClient) {
     Template.SearchTab.events = {
 	'keydown #Search' : function(event) {
 	    if (event.which == 13) {
+		shouldUpdate = false;
 		performRegex($(event.target).val());
 	    }
 	}

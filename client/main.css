@@ -10,7 +10,6 @@ body {
 }
 
 .SearchTab {
-    float:right;
 }
 
 .LoginTab {
@@ -58,4 +57,10 @@ body {
 
 a {
     text-decoration:none;
+}
+
+#notification {
+    float:right;
+    margin-right:35%;
+    text-align:center;
 }
