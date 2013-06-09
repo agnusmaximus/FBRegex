@@ -37,9 +37,9 @@ body {
     column-break-inside: avoid;
     background: -webkit-linear-gradient(45deg, #FFF, #F9F9F9);
     opacity: 1;    
-    -webkit-transition: all .2s ease;
-    -moz-transition: all .2s ease;
-    -o-transition: all .2s ease;
+    -webkit-transition: all .5s ease;
+    -moz-transition: all .5s ease;
+    -o-transition: all .5s ease;
 }
 
 .description {
@@ -63,4 +63,8 @@ a {
     float:right;
     margin-right:40%;
     text-align:center;
+}
+
+.highlight {
+    color: red;
 }

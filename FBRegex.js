@@ -14,13 +14,13 @@ if (Meteor.isClient) {
     }
 
     /*
-      function createPostTemplate
-      --------------------------------
-      Creates a post template given html and
-      appends it to the texts tab section
-
-      @html - html
-      @force - should force create post template
+     * function createPostTemplate
+     * --------------------------------
+     * Creates a post template given html and
+     * appends it to the texts tab section
+     *
+     * @html - html
+     * @force - should force create post template
     */
     function createPostTemplate(html, force) {
 	
@@ -44,12 +44,12 @@ if (Meteor.isClient) {
     }
 
     /*
-      function appendToPosts
-      --------------------------------
-      Appends home stream data to the fb_posts variable.
-      (This is a callback function)
-
-      @data - home stream data
+     * function appendToPosts
+     * --------------------------------
+     * Appends home stream data to the fb_posts variable.
+     * (This is a callback function)
+     *
+     * @data - home stream data
      */
     function appendToPosts(data) {
 	//Add to the posts array
@@ -69,56 +69,192 @@ if (Meteor.isClient) {
     }
 
     /*
-      function handleGroupIds
-      ---------------------------------
-      A callback function which handles 
-      a list of group ids. It will then
-      fetch group stream posts.
-
-      @data - list of groups
+     * function handleGroupIds
+     * ---------------------------------
+     * A callback function which handles 
+     * a list of group ids. It will then
+     * fetch group stream posts.
+     *
+     *  @data - list of groups
      */
     function handleGroupIds(data) {
 	for (i = 0; i < data.data.length; i++) {
 	    getGroupStream(data.data[i].gid, appendToPosts);
 	}
     }
+      
+    /*
+     * function removeTextFromContext
+     * ---------------------------------
+     * Removes given text from context
+     *
+     * @text - text to remove
+     * @context - context in which text occurs
+     */
+    function removeTextFromContext(text, context) {
+	context = context.replace(text, "");
+	return context;
+    }
 
+    /*
+     * function insertTextAtIndex
+     * ---------------------------------
+     * Inserts text into index of context
+     *
+     * @text - text to insert
+     * @context - context in which to insert
+     * @index - index at which to insert
+     */
+    function insertTextAtIndex(text, context, index) {
+	context = context.substr(0, index) + text + 
+	    context.substr(index, context.length);
+	return context;
+    }
+
+    /*
+     * function highlightTextWithinContext
+     * ---------------------------------
+     * Given a pattern, inserts html that
+     * highlights the pattern within context
+     *
+     * @text - pattern to highlight within context
+     * @context - context in which text occurs
+     */
+    function highlightTextWithinContext(text, context) {
+
+	startTag = '<span class="highlight">';
+	endTag = '</span>';		
+
+	first = context.indexOf(text);
+	context = insertTextAtIndex(startTag, context, first);
+
+	second = context.indexOf(text) + text.length;
+	context = insertTextAtIndex(endTag, context, second);
+	
+	return context;
+    }
+
+    /*
+     * function performRegex
+     * ----------------------------------
+     * Performs regex matching on all posts
+     * and adds these posts to the textstab
+     * section
+     *
+     * @pattern - regex pattern to match in posts
+     */
+      
     function performRegex(pattern) {
+
+	//Clear texts tab
 	$("#TextsTab").empty();
-	regex = new RegExp(pattern);
+
+	//Create a new regex pattern
+	regex = new RegExp(pattern, "mi");
+
+	//Keep track of # of matched posts and the
+	//html of these posts
 	n_results = 0;
 	total_html = "";
 
 	makeNotification("Regexing Facebook Data...");
 
+	//Loop through all posts, using regex to search
+	//different parts of the post (such as name, description,
+	//story, message, etc)
 	for (i = 0; i < posts.length; i++) {
-	    if (regex.test(posts[i].from.name) ||
-		regex.test(posts[i].description) ||
-		regex.test(posts[i].story) ||
-		regex.test(posts[i].message)) {
-		fragment = Template.Post(posts[i]);
-		//createPostTemplate(fragment, true);
-		total_html += fragment;
-		n_results++;
+
+	    match = "";
+	    didMatch = false;
+
+	    if ((match = regex.exec(posts[i].from.name)) != null) {
+		didMatch = true;
+		posts[i].from.name = 
+		    highlightTextWithinContext(match[0], posts[i].from.name);
 	    }
-	    else if (posts[i].to &&
-		regex.test(posts[i].to.data[0].name)) {
+	    else if ((match = regex.exec(posts[i].description)) != null) {
+		didMatch = true;
+		posts[i].description = 
+		    highlightTextWithinContext(match[0], posts[i].description);
+	    }
+	    else if ((match = regex.exec(posts[i].story)) != null) {
+		didMatch = true;
+		posts[i].story = 
+		    highlightTextWithinContext(match[0]. posts[i].story);
+	    }
+	    else if ((match = regex.exec(posts[i].message)) != null) {
+		didMatch = true;
+		posts[i].message =
+		    highlightTextWithinContext(match[0], posts[i].message);
+	    }
+	    else if (posts[i].to && 
+		     (match = regex.exec(posts[i].to.data[0].name)) != null) {
+		didMatch = true;
+		posts[i].to.data[0].name = 
+		    highlightTextWithinContext(match[0], posts[i].to.data[0].name);
+	    }
+
+	    if (didMatch) {
 		fragment = Template.Post(posts[i]);
-		//createPostTemplate(fragment, true);
 		total_html += fragment;
 		n_results++;
 	    }
 
+	    //Group the posts together and add them all
+	    //at once to the textstab section
 	    if (n_results % POST_BATCH_NUM == 0) {
 		createPostTemplate(total_html, true);
 		total_html = "";
 	    }
 	}
-
+	
 	createPostTemplate(total_html, true);
 	makeNotification("Found " + n_results + " results");
     }
 
+    /*
+     * function cleanTextsOfHighlight
+     * ------------------------------------
+     * Loops through all post elements and
+     * removes highlight tags from the 
+     * category texts.
+     */
+    function cleanTextsOfHighlight() {
+	startTag = '<span class="highlight">';
+	endTag = '</span>';	
+	
+	for (i = 0; i < posts.length; i++) {
+	    if (posts[i].description != null) {
+		posts[i].description = removeTextFromContext(startTag, posts[i].description);
+		posts[i].description = removeTextFromContext(endTag, posts[i].description);
+	    }
+	    
+	    if (posts[i].from.name != null) {
+		posts[i].from.name = removeTextFromContext(startTag, posts[i].from.name);
+		posts[i].from.name = removeTextFromContext(endTag, posts[i].from.name);
+	    }
+
+	    if (posts[i].to != null) {
+		posts[i].to.data[0].name = removeTextFromContext(startTag, posts[i].to.data[0].name);
+		posts[i].to.data[0].name = removeTextFromContext(endTag, posts[i].to.data[0].name);
+	    }
+	    
+	    if (posts[i].message != null) {
+		posts[i].message = removeTextFromContext(startTag, posts[i].message);
+		posts[i].message = removeTextFromContext(endTag, posts[i].message);
+	    }
+
+	    if (posts[i].story != null) {
+		posts[i].story = removeTextFromContext(startTag, posts[i].story);
+		posts[i].story = removeTextFromContext(endTag, posts[i].story);
+	    }
+	}
+    }
+
+    function cleanPattern(patt) {
+	return patt;
+    }
+    
     //Returns whether or not the user is logged in
     Template.LoginTab.isLoggedIn = function() {
 	return Meteor.userId() != null;
@@ -171,7 +307,9 @@ if (Meteor.isClient) {
 	'keydown #Search' : function(event) {
 	    if (event.which == 13) {
 		shouldUpdate = false;
-		performRegex($(event.target).val());
+		cleanTextsOfHighlight();
+		pattern = cleanPattern($(event.target).val());
+		performRegex(pattern);
 	    }
 	}
     }

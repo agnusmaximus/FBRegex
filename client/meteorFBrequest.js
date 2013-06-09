@@ -125,7 +125,6 @@ window.getGroupStream = function(id, method) {
     url = "https://graph.facebook.com/" + id + 
           "/feed?access_token=";
     url += Meteor.user().services.facebook.accessToken;
-    console.log(url);
     
     Meteor.http.get(url, function(err, resp) {
 	    method(resp.data);
