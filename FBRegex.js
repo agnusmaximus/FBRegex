@@ -162,11 +162,11 @@ if (Meteor.isClient) {
 	//Loop through all posts, using regex to search
 	//different parts of the post (such as name, description,
 	//story, message, etc)
-	for (i = 0; i < posts.length; i++) {
-
+	for (i = 0; i < posts.length; i++) {	   
+	    
 	    match = "";
 	    didMatch = false;
-
+	    
 	    if ((match = regex.exec(posts[i].from.name)) != null) {
 		didMatch = true;
 		posts[i].from.name = 
@@ -179,8 +179,9 @@ if (Meteor.isClient) {
 	    }
 	    else if ((match = regex.exec(posts[i].story)) != null) {
 		didMatch = true;
+
 		posts[i].story = 
-		    highlightTextWithinContext(match[0]. posts[i].story);
+		    highlightTextWithinContext(match[0], posts[i].story);
 	    }
 	    else if ((match = regex.exec(posts[i].message)) != null) {
 		didMatch = true;
@@ -193,13 +194,13 @@ if (Meteor.isClient) {
 		posts[i].to.data[0].name = 
 		    highlightTextWithinContext(match[0], posts[i].to.data[0].name);
 	    }
-
+	    
 	    if (didMatch) {
 		fragment = Template.Post(posts[i]);
 		total_html += fragment;
 		n_results++;
 	    }
-
+	    
 	    //Group the posts together and add them all
 	    //at once to the textstab section
 	    if (n_results % POST_BATCH_NUM == 0) {
