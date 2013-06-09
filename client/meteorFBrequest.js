@@ -72,6 +72,27 @@ window.feedStreamContinue = function(url, method) {
 	});
 }
 
+    
+/* function getHomeStream
+ * ---------------------------------------------------
+ * Like the other methods, gets user's home stream
+ * content and calls the callback method on the data
+ *
+ * @id - id of user's home stream to fetch
+ * @method - callback
+ */
+window.getHomeStream = function(id, method) {
+    url = "https://graph.facebook.com/" + id + 
+          "/feed?access_token=";
+    url += Meteor.user().services.facebook.accessToken;
+
+    Meteor.http.get(url, function(err, resp) {
+	    method(resp.data);
+	    nextUrl = resp.data.paging.next;
+	    window.feedStreamContinue(nextUrl, method);
+	});
+}
+    
 /* 
    function getStatusStream
    --------------------------------------------------
