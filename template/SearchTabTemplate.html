@@ -1,5 +1,9 @@
 <template name="SearchTab">
   <div class="SearchTab">
-    <input id="Search" class="input-large" type="text" placeholder="Search"/>
+    <input id="Search" class="input-large" type="text" placeholder="Search"/
+	   {{#unless isLoggedIn}}
+	   disabled
+	   {{/unless}}
+	   >
   </div>
 </template>

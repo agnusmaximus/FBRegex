@@ -314,6 +314,10 @@ if (Meteor.isClient) {
 	    }
 	}
     }
+
+    Template.SearchTab.isLoggedIn = function() {
+	return (Meteor.user() != null);
+    }
 }
 
 if (Meteor.isServer) {
