@@ -67,7 +67,7 @@ window.feedStreamContinue = function(url, method) {
 
 	    if (resp.data.paging != null) {
 		nextUrl = resp.data.paging.next;
-		feedStreamContinue(nextUrl, method);
+		window.feedStreamContinue(nextUrl, method);
 	    }
 	});
 }
@@ -110,7 +110,7 @@ window.getStatusStream = function(url, method) {
     Meteor.http.get(url, function(err, resp) {
 	    method(resp.data);
 	    nextUrl = resp.data.paging.next;
-	    statusStreamContinue(nextUrl, method);
+	    window.statusStreamContinue(nextUrl, method);
 	});
 }
 
@@ -129,7 +129,7 @@ window.statusStreamContinue = function(url, method) {
 	    method(resp.data);
 	    if (resp.data.pagination != null) {
 		nexturl = resp.data.pagination.next;
-		statusStreamContinue(nexturl);
+		window.statusStreamContinue(nexturl);
 	    }
 	});
 }
@@ -146,13 +146,15 @@ window.getGroupStream = function(id, method) {
     url = "https://graph.facebook.com/" + id + 
           "/feed?access_token=";
     url += Meteor.user().services.facebook.accessToken;
+
+    console.log(url);
     
     Meteor.http.get(url, function(err, resp) {
 	    method(resp.data);
 	    if (resp.data.data.length != 0) {
 		nextUrl = resp.data.paging.next;
 		return;
-		feedStreamContinue(nextUrl, method);
+		window.feedStreamContinue(nextUrl, method);
 	    }
 	});
 }
