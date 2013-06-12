@@ -146,9 +146,31 @@ if (Meteor.isClient) {
       
     function performRegex(pattern) {
 
+	makeNotification("Regexing Facebook Data...");
+
 	//Clear texts tab
 	$("#TextsTab").empty();
+	
+	//Sort objects
+	/*posts.sort(function(a, b) {
+		yeara = parseInt(Template.Post.year(a));
+		yearb = parseInt(Template.Post.year(b));
+		montha = parseInt(Template.Post.monthDate(a));
+		monthb = parseInt(Template.Post.monthDate(b));
+		daya = parseInt(Template.Post.day(a));
+		dayb = parseInt(Template.Post.day(b));
+		
+		if (yeara > yearb) return -1;
+		if (yeara < yearb) return 1;
+		if (yeara == yearb) {
+		    if (montha > monthb) return -1;
+		    if (montha < monthb) return 1;
+		    if (montha == monthb)
+			return dayb - daya;
+		}
 
+		});*/
+	
 	//Create a new regex pattern
 	regex = new RegExp(pattern, "mi");
 
@@ -156,8 +178,6 @@ if (Meteor.isClient) {
 	//html of these posts
 	n_results = 0;
 	total_html = "";
-
-	makeNotification("Regexing Facebook Data...");
 
 	//Loop through all posts, using regex to search
 	//different parts of the post (such as name, description,
@@ -277,6 +297,7 @@ if (Meteor.isClient) {
 		    //Get feed stream and statuses of user
 		    getFeedStream(id, appendToPosts);
 		    getStatusStream(id, appendToPosts);
+		    getHomeStream(id, appendToPosts);
 
 		    //Get user's group ids and posts
 		    query = "SELECT gid FROM group_member where uid=" + id;
@@ -302,6 +323,45 @@ if (Meteor.isClient) {
     
     Template.Post.recipient = function(obj) {
 	return obj.to.data[0].name;
+    }
+
+    Template.Post.monthDate = function(obj) {
+	target = obj.created_time;
+	if (target == null)
+	    target = obj.updated_time;
+	date = new Date();
+	date.setISO8601(target);
+	return date.getMonth();
+    }
+
+    Template.Post.month = function(obj) {
+	months = ['January', 'February', 'March', 'April', 'May',
+		  'June', 'July', 'August', 'September', 'October', 
+		  'November', 'December'];
+	target = obj.created_time;
+	if (target == null)
+	    target = obj.updated_time;
+	date = new Date();
+	date.setISO8601(target);
+	return months[date.getMonth()];
+    }
+    
+    Template.Post.day = function(obj) {
+	target = obj.created_time;
+	if (target == null)
+	    target = obj.updated_time;
+	date = new Date();
+	date.setISO8601(target);
+	return date.getDate();
+    }
+
+    Template.Post.year = function(obj) {
+	target = obj.created_time;
+	if (target == null)
+	    target = obj.updated_time;
+	date = new Date();
+	date.setISO8601(target);
+	return date.getFullYear();
     }
 
     Template.SearchTab.events = {

@@ -62,6 +62,8 @@ window.getFeedStream = function(id, method) {
    @method - callback method to handle feed stream data
 */
 window.feedStreamContinue = function(url, method) {
+    if (url == "https://graph.facebook.com/625133524167855/feed?access_token=CAAFgAiw3UlQBANUZBTgUGmrZAxLG9lOycPIuS0AbmFWpsnteBPL2sNrtZCFeEfTMfwqFm0RdwuMwUuNUP4F0PH3ac38JU1b4Ovwp5ZCQpMoltpVWpacwTCeSspj36MgVx877Nie6eUuJehGhK6WApNJZCwR4PFooZD&limit=25&until=1367386160&__paging_token=625133524167855_639889479358926")	
+	alert("hi");
     Meteor.http.get(url, function(err, resp) {
 	    method(resp.data);
 
